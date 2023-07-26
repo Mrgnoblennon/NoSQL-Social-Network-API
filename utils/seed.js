@@ -1,41 +1,41 @@
-// utils/seed.js
-
-const { connect, connection } = require('mongoose');
-const usersSeedData = require('./usersData'); // Assuming this file contains users seed data
-const thoughtsSeedData = require('./thoughtsData'); // Assuming this file contains thoughts seed data
-const User = require('../models/user'); // Assuming the User model is defined in ../models/user.js
-const Thought = require('../models/thought'); // Assuming the Thought model is defined in ../models/thought.js
-
-const connectionString = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/socialNetwork';
-
-connect(connectionString, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const db = require('../config/connection');
+const User = require('../models/User'); // Import the User model
+const Thought = require('../models/Thought'); // Import the Thought model
+const usersData = require('./usersData');
+const thoughtsData = require('./thoughtsData'); // Add this line
 
 const seedDatabase = async () => {
   try {
-    // Clear existing data from the collections (Optional step)
-    await User.deleteMany();
-    await Thought.deleteMany();
+    // Connect to the database
+    await db;
 
-    // Insert users seed data into the User collection
-    const createdUsers = await User.insertMany(usersSeedData);
+    // Clear existing data (optional, only do this if you want to start with a clean slate)
+    await User.deleteMany({});
+    await Thought.deleteMany({});
 
-    // Create an array to hold thought objects with associated user IDs
-    const thoughtsWithUserIds = thoughtsSeedData.map(thought => {
-      const user = createdUsers.find(user => user.username === thought.username);
-      return { ...thought, username: user._id };
-    });
+    // Seed users
+    const users = await User.create(usersData);
 
-    // Insert thoughts seed data into the Thought collection
-    await Thought.insertMany(thoughtsWithUserIds);
+    // Seed thoughts
+    const thoughts = await Thought.create(thoughtsData);
 
-    console.log('Seed data inserted successfully!');
-    connection.close();
+
+    
+    // Associate thoughts with users
+    for (let i = 0; i < users.length; i++) {
+      const user = users[i];
+      const userThoughts = thoughts.filter(
+        (thought) => thought.username === user.username
+      );
+      user.thoughts = userThoughts.map((thought) => thought._id);
+      await user.save();
+    }
+
+    console.log('Sample data created successfully.');
+    process.exit(0); // Exit the script after data creation
   } catch (error) {
     console.error('Error seeding the database:', error);
-    connection.close();
+    process.exit(1); // Exit the script with an error code
   }
 };
 

@@ -1,4 +1,4 @@
-// seedData/thoughts.js
+ // seedData/thoughts.js
 
 const thoughts = [
     {
@@ -25,12 +25,8 @@ const thoughts = [
       "thoughtText": "Thought 5",
       "username": "user3",
       "reactions": []
-    },
-    {
-      "thoughtText": "Thought 6",
-      "username": "user4",
-      "reactions": []
-    },
+    }
+    
     // Add more thoughts if needed
   ];
   
