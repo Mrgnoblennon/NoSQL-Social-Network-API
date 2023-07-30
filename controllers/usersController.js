@@ -107,15 +107,38 @@ const addFriend = async (req, res) => {
 const removeFriend = async (req, res) => {
   try {
     const { userId, friendId } = req.params;
-    const user = await User.findByIdAndUpdate(userId, { $pull: { friends: friendId } }, { new: true });
+
+    // Step 1: Find the user by ID
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
-    res.json(user);
+
+    // Step 2: Remove the friendId from the user's friends array
+    user.friends.pull(friendId);
+    await user.save();
+
+    // Step 3: Find the friend by ID
+    const friend = await User.findById(friendId);
+    if (!friend) {
+      return res.status(404).json({ message: 'Friend not found.' });
+    }
+
+    // Step 4: Remove the userId from the friend's friends array
+    friend.friends.pull(userId);
+    await friend.save();
+
+    // Step 5: Remove the friend from the friend's friends array
+    friend.friends.pull(friendId);
+    await friend.save();
+
+    res.json({ message: 'Friend removed successfully.' });
   } catch (error) {
+    console.error('Error removing friend:', error);
     res.status(500).json({ error: 'Server error. Failed to remove friend.' });
   }
 };
+
 
 module.exports = {
   getAllUsers,
