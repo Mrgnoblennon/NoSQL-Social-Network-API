@@ -103,15 +103,30 @@ const removeReaction = async (req, res) => {
       { $pull: { reactions: { reactionId: reactionId } } },
       { new: true }
     );
+
     if (!thought) {
       return res.status(404).json({ message: 'Thought not found.' });
     }
+
+    // Step 1: Find the user by ID
+    const user = await User.findById(thought.username);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Step 2: Retrieve the list of reaction IDs associated with the user
+    const reactionIds = user.reactions;
+
+    // Step 3: Delete all reactions with those IDs from the Thought collection
+    await Thought.updateMany({ 'reactions.reactionId': { $in: reactionIds } }, { $pull: { reactions: { reactionId: { $in: reactionIds } } } });
+
     res.json(thought);
   } catch (error) {
     console.log('Error:', error);
     res.status(500).json({ error: 'Server error. Failed to remove reaction.' });
   }
 };
+
 
 
 module.exports = {

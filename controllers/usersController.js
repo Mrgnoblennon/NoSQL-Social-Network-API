@@ -75,11 +75,10 @@ const deleteUser = async (req, res) => {
 
     res.json({ message: 'User and associated thoughts deleted successfully.' });
   } catch (error) {
-    console.error('Error deleting user:', error);
+    console.log('Error:', error);
     res.status(500).json({ error: 'Server error. Failed to delete user and thoughts.' });
   }
 };
-
 
 // Add a friend to the user
 const addFriend = async (req, res) => {
